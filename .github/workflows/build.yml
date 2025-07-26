@@ -51,4 +51,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-build
-          path: export/windows/bin/*.exe
+          path: export/release/windows/bin/*.exe

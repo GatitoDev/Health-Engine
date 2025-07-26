@@ -1,5 +1,6 @@
 package;
 
+import data.Sprite;
 import flixel.group.FlxSpriteGroup;
 import openfl.Lib;
 import Section.SwagSection;
@@ -167,7 +168,7 @@ class PlayState extends MusicBeatState
 	override public function create()
 	{
 		instance = this;
-		if (FlxG.save.data.fpsCap > 290) (cast (Lib.current.getChildAt(0), Main)).setFPSCap(800);
+		//if (FlxG.save.data.fpsCap > 290) (cast (Lib.current.getChildAt(0), Main)).setFPSCap(800);
 		if (FlxG.sound.music != null) FlxG.sound.music.stop();
 
 		sicks = 0;
@@ -312,7 +313,7 @@ class PlayState extends MusicBeatState
 			prevCamFollow = null;
 		}
 		add(camFollow);
-		FlxG.camera.follow(camFollow, LOCKON, 0.04 * (30 / (cast (Lib.current.getChildAt(0), Main)).getFPS()));
+		FlxG.camera.follow(camFollow, LOCKON, 0.04 * (30 / KadeEngineData.getFPSCap()));
 		FlxG.camera.zoom = stage.defaultCamZoom;
 		FlxG.camera.focusOn(camFollow.getPosition());
 		FlxG.worldBounds.set(0, 0, FlxG.width, FlxG.height);
@@ -668,41 +669,23 @@ class PlayState extends MusicBeatState
 	function sortByShit(Obj1:Note, Obj2:Note):Int { return FlxSort.byValues(FlxSort.ASCENDING, Obj1.strumTime, Obj2.strumTime); }
 
 	private function generateStaticArrows(player:Int):Void {
+		final directions:Array<String> = ['LEFT', 'DOWN', 'UP', 'RIGHT'];
+		final prefixes:Array<String> = ['left', 'down', 'up', 'right'];
+		final colors:Array<String> = ['green', 'red', 'blue', 'purple'];
+		final colorFrames:Array<Int> = [6, 7, 5, 4];
+		final arrowColors:Array<String> = ['arrowUP', 'arrowRIGHT', 'arrowDOWN', 'arrowLEFT'];
+
 		for (i in 0...4) {
-			var babyArrow:FlxSprite = new FlxSprite(0, strumLine.y);
-
-			final directions:Array<String> = ['LEFT', 'DOWN', 'UP', 'RIGHT'];
-			final prefixes:Array<String> = ['left', 'down', 'up', 'right'];
-			final colors:Array<String> = ['green', 'red', 'blue', 'purple'];
-			final colorFrames:Array<Int> = [6, 7, 5, 4];
-			final arrowColors:Array<String> = ['arrowUP', 'arrowRIGHT', 'arrowDOWN', 'arrowLEFT'];
-
-			babyArrow.x += Note.swagWidth * Std.int(Math.abs(i));
-
-			if (SONG.noteStyle == 'pixel') {
-				babyArrow.loadGraphic(Paths.image('weeb/pixelUI/arrows-pixels'), true, 17, 17);
-				for (j in 0...4) babyArrow.animation.add(colors[j], [colorFrames[j]]);
-				babyArrow.animation.add('static', [Std.int(Math.abs(i))]);
-				babyArrow.animation.add('pressed', [Std.int(Math.abs(i)) + 4, Std.int(Math.abs(i)) + 8], 12, false);
-				babyArrow.animation.add('confirm', [Std.int(Math.abs(i)) + 12, Std.int(Math.abs(i)) + 16], Std.int(Math.abs(i)) == 2 ? 12 : 24, false);
-				babyArrow.setGraphicSize(Std.int(babyArrow.width * daPixelZoom));
-				babyArrow.updateHitbox();
-				babyArrow.antialiasing = false;
-			} else {
-				babyArrow.frames = Paths.getSparrowAtlas('NOTE_assets');
-				for (j in 0...4) babyArrow.animation.addByPrefix(colors[j], arrowColors[j]);
-				babyArrow.animation.addByPrefix('static', 'arrow' + directions[Std.int(Math.abs(i))]);
-				babyArrow.animation.addByPrefix('pressed', prefixes[Std.int(Math.abs(i))] + ' press', 24, false);
-				babyArrow.animation.addByPrefix('confirm', prefixes[Std.int(Math.abs(i))] + ' confirm', 24, false);
-				babyArrow.antialiasing = true;
-				babyArrow.setGraphicSize(Std.int(babyArrow.width * 0.7));
-			}
-
-			babyArrow.updateHitbox();
-			babyArrow.scrollFactor.set();
-			babyArrow.animation.play('static');
-			babyArrow.ID = i;
-			babyArrow.x += 50 + (FlxG.width / 2 * player);
+			final xPos:Float = Note.swagWidth * i + 50 + (FlxG.width / 2 * player);
+			final isPixel:Bool = SONG.noteStyle == 'pixel';
+			final anims = [
+				{name: 'static', prefix: isPixel ? null : 'arrow${directions[i]}', frames: isPixel ? [i] : null, frameRate: 0, loop: false},
+				{name: 'pressed', prefix: isPixel ? null : '${prefixes[i]} press', frames: isPixel ? [i + 4, i + 8] : null, frameRate: isPixel ? 12 : 24, loop: false},
+				{name: 'confirm', prefix: isPixel ? null : '${prefixes[i]} confirm', frames: isPixel ? [i + 12, i + 16] : null,frameRate: isPixel ? (i == 2 ? 12 : 24) : 24, loop: false}
+			];
+			final babyArrow:Sprite = Sprite.create(isPixel ? 'weeb/pixelUI/arrows-pixels' : 'NOTE_assets', xPos, strumLine.y,
+			 1, 1, { scale: isPixel ? daPixelZoom : 0.7, antialiasing: !isPixel}, { atlas: !isPixel, animations: anims, defaultAnim: 'static'});
+			for (j in 0...4) isPixel ? babyArrow.animation.add(colors[j], [colorFrames[j]]) : babyArrow.animation.addByPrefix(colors[j], arrowColors[j]);
 
 			if (!isStoryMode) {
 				babyArrow.y -= 10;
@@ -710,6 +693,7 @@ class PlayState extends MusicBeatState
 				FlxTween.tween(babyArrow, {y: babyArrow.y + 10, alpha: 1}, 1, {ease: FlxEase.circOut, startDelay: 0.5 + (0.2 * i)});
 			}
 
+			babyArrow.ID = i;
 			(player == 1 ? playerStrums : strumLineNotes).add(babyArrow);
 			strumLineNotes.add(babyArrow);
 		}
@@ -988,7 +972,7 @@ class PlayState extends MusicBeatState
 			FlxG.save.data.downscroll = false;
 		}
 
-		if (FlxG.save.data.fpsCap > 290) (cast(Lib.current.getChildAt(0), Main)).setFPSCap(290);
+		//if (FlxG.save.data.fpsCap > 290) (cast(Lib.current.getChildAt(0), Main)).setFPSCap(290);
 
 		#if windows if (luaModchart != null) {
 			luaModchart.die();
@@ -1236,10 +1220,9 @@ class PlayState extends MusicBeatState
 	var leftHold:Bool = false;	
 
 	private function keyShit():Void {
-		// Control arrays (L D U R)
-		var holdArray = [controls.LEFT, controls.DOWN, controls.UP, controls.RIGHT];
-		var pressArray = [controls.LEFT_P, controls.DOWN_P, controls.UP_P, controls.RIGHT_P];
-		var releaseArray = [controls.LEFT_R, controls.DOWN_R, controls.UP_R, controls.RIGHT_R];
+		var holdArray:Array<Bool> = [controls.LEFT, controls.DOWN, controls.UP, controls.RIGHT];
+		var pressArray:Array<Bool> = [controls.LEFT_P, controls.DOWN_P, controls.UP_P, controls.RIGHT_P];
+		var releaseArray:Array<Bool> = [controls.LEFT_R, controls.DOWN_R, controls.UP_R, controls.RIGHT_R];
 
 		if (FlxG.save.data.botplay) {
 			holdArray = [false, false, false, false];
@@ -1335,11 +1318,11 @@ class PlayState extends MusicBeatState
 		playerStrums.forEach(spr -> {
 			if (pressArray[spr.ID] && spr.animation.curAnim.name != 'confirm') spr.animation.play('pressed');
 			if (!holdArray[spr.ID]) spr.animation.play('static');
-
 			spr.centerOffsets();
 			if (spr.animation.curAnim.name == 'confirm' && !curStage.startsWith('school')) {
 				spr.offset.x -= 13;
 				spr.offset.y -= 13;
+				spr.alpha = 1;
 			}
 		});
 	}

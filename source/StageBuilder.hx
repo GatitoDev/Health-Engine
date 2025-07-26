@@ -6,6 +6,7 @@ import haxe.Json;
 import sys.io.File;
 import sys.FileSystem;
 import PlayState;
+import data.Sprite;
 
 class StageBuilder extends FlxSpriteGroup {
     public var curStage:String = 'stage';
@@ -66,17 +67,13 @@ class StageBuilder extends FlxSpriteGroup {
     public function buildStage():Void {
         switch(curStage) {
             case 'stage': buildDefaultStage();
-            default: buildDefaultStage(); // Usar el stage por defecto si no se encuentra
+            default: buildDefaultStage();
         }
     }
 
     public function buildDefaultStage():Void {
-        var bg:FlxSprite = Sprite.createBG('${stagePath}stageback', -600, -200, 0.9, 0.9);
-        add(bg);
-        var front:FlxSprite = Sprite.createBG('${stagePath}stagefront', -650, 600, 0.9, 0.9, { scale: 1.1 });
-        add(front);
-        var curtains:FlxSprite = Sprite.createBG('${stagePath}stagecurtains', -500, -300, 1.3, 1.3, { scale: 0.9 });
-        add(curtains);
-        trace('${Paths.image('${stagePath}stageback')}');
+        add(Sprite.create('${stagePath}stageback', -600, -200, 0.9, 0.9));
+        add(Sprite.create('${stagePath}stagefront', -650, 600, 0.9, 0.9, { scale: 1.1, background: true}));
+        add(Sprite.create('${stagePath}stagecurtains', -500, -300, 1.3, 1.3, { scale: 0.9, background: true }));
     }
 }
