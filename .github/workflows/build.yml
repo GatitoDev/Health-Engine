@@ -14,29 +14,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache Haxelib
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/haxe/lib/
-            ~/haxe/extra/
-          key: ${{ runner.os }}-haxelib-${{ hashFiles('**/project.xml') }}
-
       - name: Setup Haxe
         uses: krdlab/setup-haxe@v1
         with:
-          haxe-version: "4.3.2"
+          haxe-version: "4.3.6"
 
-      - name: Install Lime/OpenFL
+      - name: Install core dependencies
         run: |
+          haxelib install hxcpp
           haxelib install lime
           haxelib run lime setup
           haxelib install openfl
 
-      - name: Install Haxe dependencies
+      - name: Install project dependencies
         run: |
           haxelib install hxp
-          haxelib install hxcpp
           haxelib install format
           haxelib install flixel
           haxelib install flixel-ui
@@ -44,11 +36,11 @@ jobs:
           haxelib install flixel-addons
 
       - name: Build for Windows
-        run: haxelib run lime build windows -v
+        run: haxelib run lime build windows
 
       - name: Upload artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: windows-build
-          path: export/release/windows/bin/*.exe
+          path: export/release/windows/bin
