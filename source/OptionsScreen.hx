@@ -27,7 +27,7 @@ class OptionsScreen extends MusicBeatState
     override function create() {
         super.create();
         FlxG.mouse.visible = true;
-        var bg:FlxSprite = Sprite.create('menuDesat', {scale: 1.1, color: FlxColor.GRAY, background: true});
+        var bg:FlxSprite = Sprite.create('menuDesat', {scale: 1.1, color: FlxColor.GRAY});
         add(bg.screenCenter());
         initPanel();
     }

@@ -2,7 +2,6 @@ package;
 
 import Section.SwagSection;
 import haxe.Json;
-import haxe.format.JsonParser;
 import lime.utils.Assets;
 
 using StringTools;
@@ -37,8 +36,7 @@ class Song
 	public var noteStyle:String = 'normal';
 	public var stage:String = 'stage';
 
-	public function new(song, notes, bpm)
-	{
+	public function new(song:String, notes:Array<SwagSection>, bpm:Int) {
 		this.song = song;
 		this.notes = notes;
 		this.bpm = bpm;
@@ -46,35 +44,14 @@ class Song
 
 	public static function loadFromJson(jsonInput:String, ?folder:String):SwagSong
 	{
-		var rawJson = Assets.getText(Paths.json(folder.toLowerCase() + '/' + jsonInput.toLowerCase())).trim();
-
-		while (!rawJson.endsWith("}"))
-		{
-			rawJson = rawJson.substr(0, rawJson.length - 1);
-			// LOL GOING THROUGH THE BULLSHIT TO CLEAN IDK WHATS STRANGE
-		}
-
-		// FIX THE CASTING ON WINDOWS/NATIVE
-		// Windows???
-		// trace(songData);
-
-		// trace('LOADED FROM JSON: ' + songData.notes);
-		/* 
-			for (i in 0...songData.notes.length)
-			{
-				trace('LOADED FROM JSON: ' + songData.notes[i].sectionNotes);
-				// songData.notes[i].sectionNotes = songData.notes[i].sectionNotes
-			}
-
-				daNotes = songData.notes;
-				daSong = songData.song;
-				daBpm = songData.bpm; */
-
+		var rawJson = Assets.getText(Paths.json('${folder.toLowerCase()}/${jsonInput.toLowerCase()}')).trim();
+		var lastValidBraceIndex:Int = rawJson.lastIndexOf('}');
+		if (lastValidBraceIndex != -1) rawJson = rawJson.substr(0, lastValidBraceIndex + 1);
+		else trace('ERROR: Very corrupted JSON for the song: $jsonInput');
 		return parseJSONshit(rawJson);
 	}
 
-	public static function parseJSONshit(rawJson:String):SwagSong
-	{
+	public static function parseJSONshit(rawJson:String):SwagSong {
 		var swagShit:SwagSong = cast Json.parse(rawJson).song;
 		swagShit.validScore = true;
 		return swagShit;

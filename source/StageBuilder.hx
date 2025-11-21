@@ -73,7 +73,7 @@ class StageBuilder extends FlxSpriteGroup {
 
     public function buildDefaultStage():Void {
         add(Sprite.create('${stagePath}stageback', -600, -200, 0.9, 0.9));
-        add(Sprite.create('${stagePath}stagefront', -650, 600, 0.9, 0.9, { scale: 1.1, background: true}));
-        add(Sprite.create('${stagePath}stagecurtains', -500, -300, 1.3, 1.3, { scale: 0.9, background: true }));
+        add(Sprite.create('${stagePath}stagefront', -650, 600, 0.9, 0.9, { scale: 1.1}));
+        add(Sprite.create('${stagePath}stagecurtains', -500, -300, 1.3, 1.3, { scale: 0.9}));
     }
 }

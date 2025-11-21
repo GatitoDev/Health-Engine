@@ -75,6 +75,8 @@ class Note extends Sprite {
 				var scrollSpeed = (FlxG.save.data.scrollSpeed != 1) ? FlxG.save.data.scrollSpeed : PlayState.SONG.speed;
 				prevNote.scale.y *= Conductor.stepCrochet / 100 * 1.5 * scrollSpeed;
 				prevNote.updateHitbox();
+				if (antialiasing)
+					prevNote.scale.y *= 1.0 + (1.0 / prevNote.frameHeight);
 			}
 
 			if (FlxG.save.data.downscroll) {

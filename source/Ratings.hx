@@ -56,12 +56,9 @@ class Ratings {
             else "sick";
     }
 
-    public static function CalculateRanking(score:Int, scoreDef:Int, nps:Int, maxNPS:Int, accuracy:Float):String {
+    public static function CalculateRanking(score:Int, scoreDef:Int, accuracy:Float):String {
         var parts = [];
         final scoreFormatted:String = FlxStringUtil.formatMoney(score, false, true);
-        
-        if (FlxG.save.data.npsDisplay)
-            parts.push('NPS: $nps (Max $maxNPS)');
         
         if (!FlxG.save.data.botplay) {
             parts.push('Acc: ${HelperFunctions.truncateFloat(accuracy, 2)}%');

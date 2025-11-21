@@ -407,28 +407,6 @@ class ScrollSpeedOption extends Option
 	}
 }
 
-
-class NPSDisplayOption extends Option
-{
-	public function new(desc:String)
-	{
-		super();
-		description = desc;
-	}
-
-	public override function press():Bool
-	{
-		FlxG.save.data.npsDisplay = !FlxG.save.data.npsDisplay;
-		display = updateDisplay();
-		return true;
-	}
-
-	private override function updateDisplay():String
-	{
-		return "NPS Display " + (!FlxG.save.data.npsDisplay ? "off" : "on");
-	}
-}
-
 class ReplayOption extends Option
 {
 	public function new(desc:String)
