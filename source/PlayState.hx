@@ -51,9 +51,6 @@ class PlayState extends MusicBeatState
 	public static var songPosBar:FlxBar;
 	public static var songName:FlxText;
 
-	public static var rep:Replay;
-	public static var loadRep:Bool = false;
-
 	var songLength:Float = 0;
 
 	private var vocals:FlxSound;
@@ -122,7 +119,6 @@ class PlayState extends MusicBeatState
 	public static var songScore:Int = 0;
 	public static var songScoreDef:Int = 0;
 	var scoreTxt:FlxText;
-	var replayTxt:FlxText;
 
 	public static var campaignScore:Int = 0;
 
@@ -131,8 +127,6 @@ class PlayState extends MusicBeatState
 	public static var daPixelZoom:Float = 6;
 
 	var inCutscene:Bool = false;
-	public static var repPresses:Int = 0;
-	public static var repReleases:Int = 0;
 
 	public static var timeCurrently:Float = 0;
 	public static var timeCurrentlyR:Float = 0;
@@ -159,9 +153,6 @@ class PlayState extends MusicBeatState
 		goods = 0;
 
 		misses = 0;
-
-		repPresses = 0;
-		repReleases = 0;
 
 		#if windows executeModchart = FileSystem.exists(Paths.lua(PlayState.SONG.song.toLowerCase()  + "/modchart")); #end
 		#if !cpp executeModchart = false; #end
@@ -238,17 +229,6 @@ class PlayState extends MusicBeatState
 					tweenCamIn();
 				}
 			case 'dad': camPos.x += 400;
-		}
-
-		if (loadRep)
-		{
-			FlxG.watch.addQuick('rep rpesses',repPresses);
-			FlxG.watch.addQuick('rep releases',repReleases);
-			
-			FlxG.save.data.botplay = true;
-			FlxG.save.data.scrollSpeed = rep.replay.noteSpeed;
-			FlxG.save.data.downscroll = rep.replay.isDownscroll;
-			// FlxG.watch.addQuick('Queued',inputsQueued);
 		}
 
 		var doof:DialogueBox = new DialogueBox(false, dialogue);
@@ -332,10 +312,8 @@ class PlayState extends MusicBeatState
 		scoreTxt = new FlxText(0, healthBarBG.y + 30, FlxG.width, "", 22).setFormat(Paths.font("vcr.ttf"), 22, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		scoreTxt.screenCenter(X).scrollFactor.set();
 		uiGroup.add(scoreTxt);
-		replayTxt = createTextLabel("REPLAY", healthBarBG.x + healthBarBG.width/2 - 75, healthBarBG.y + (FlxG.save.data.downscroll ? 100 : -100));
-		if (loadRep) add(replayTxt);
 		botPlayState = createTextLabel("BOTPLAY", healthBarBG.x + healthBarBG.width/2 - 75, healthBarBG.y + (FlxG.save.data.downscroll ? 100 : -100));
-		if (FlxG.save.data.botplay && !loadRep) add(botPlayState);
+		if (FlxG.save.data.botplay) add(botPlayState);
 
 		uiGroup.cameras = [camHUD];
 		strumLineNotes.cameras = [camHUD];
@@ -346,7 +324,6 @@ class PlayState extends MusicBeatState
 			songPosBar.cameras = [camHUD];
 			songName.cameras = [camHUD];
 		}
-		if (loadRep) replayTxt.cameras = [camHUD];
 		startingSong = true;
 		
 		if (isStoryMode) {
@@ -358,7 +335,6 @@ class PlayState extends MusicBeatState
 				default: startCountdown();
 			}
 		}
-		if (!loadRep) rep = new Replay("na");
 		super.create();
 	}
 
@@ -462,10 +438,7 @@ class PlayState extends MusicBeatState
 	}
 
 	var previousFrameTime:Int = 0;
-	var lastReportedPlayheadPosition:Int = 0;
 	var songTime:Float = 0;
-
-
 	var songStarted = false;
 
 	function startSong():Void
@@ -473,7 +446,6 @@ class PlayState extends MusicBeatState
 		startingSong = false;
 		songStarted = true;
 		previousFrameTime = FlxG.game.ticks;
-		lastReportedPlayheadPosition = 0;
 
 		if (!paused) FlxG.sound.playMusic(Paths.inst(PlayState.SONG.song), 1, false);
 
@@ -830,13 +802,6 @@ class PlayState extends MusicBeatState
 	}
 
 	function endSong():Void {
-		if (!loadRep) rep.SaveReplay(saveNotes);
-		else {
-			FlxG.save.data.botplay = false;
-			FlxG.save.data.scrollSpeed = 1;
-			FlxG.save.data.downscroll = false;
-		}
-
 		#if windows if (luaModchart != null) { luaModchart.die(); luaModchart = null; } #end
 
 		canPause = false;
@@ -1122,13 +1087,8 @@ class PlayState extends MusicBeatState
 			var downscroll = FlxG.save.data.downscroll;
 			if ((downscroll && daNote.y > strumLine.y) || (!downscroll && daNote.y < strumLine.y)) {
 				if (FlxG.save.data.botplay && (daNote.canBeHit || daNote.tooLate) && daNote.mustPress) {
-					if (loadRep && rep.replay.songNotes.contains(HelperFunctions.truncateFloat(daNote.strumTime, 2))) {
-						goodNoteHit(daNote);
-						boyfriend.holdTimer = daNote.sustainLength;
-					} else if (!loadRep) {
-						goodNoteHit(daNote);
-						boyfriend.holdTimer = daNote.sustainLength;
-					}
+					goodNoteHit(daNote);
+					boyfriend.holdTimer = daNote.sustainLength;
 				}
 			}
 		});
@@ -1219,7 +1179,7 @@ class PlayState extends MusicBeatState
 			if (luaModchart != null) luaModchart.executeState('playerOneSing', [note.noteData, Conductor.songPosition]);
 			#end
 
-			if (!loadRep && note.mustPress) saveNotes.push(HelperFunctions.truncateFloat(note.strumTime, 2));
+			if (note.mustPress) saveNotes.push(HelperFunctions.truncateFloat(note.strumTime, 2));
 			
 			playerStrums.forEach(spr -> if (Math.abs(note.noteData) == spr.ID) spr.animation.play('confirm', true));
 			

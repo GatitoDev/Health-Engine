@@ -77,12 +77,6 @@ class PauseSubState extends MusicBeatSubstate {
 				FlxG.switchState(() -> new PlayState());
             case "Exit to menu":
 				FlxG.sound.play(Paths.sound('cancelMenu'));
-                if (PlayState.loadRep) {
-                    FlxG.save.data.botplay = false;
-                    FlxG.save.data.scrollSpeed = 1;
-                    FlxG.save.data.downscroll = false;
-                }
-                PlayState.loadRep = false;
                 #if windows if (PlayState.luaModchart != null) {
                     PlayState.luaModchart.die();
                     PlayState.luaModchart = null;
