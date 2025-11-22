@@ -1,9 +1,5 @@
-// this file is for modchart things, this is to declutter playstate.hx
-
-// Lua
 #if windows
 import flixel.tweens.FlxEase;
-import openfl.filters.ShaderFilter;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import openfl.geom.Matrix;
@@ -14,13 +10,10 @@ import llua.Convert;
 import llua.Lua;
 import llua.State;
 import llua.LuaL;
-import flixel.FlxBasic;
-import flixel.FlxCamera;
 import flixel.FlxG;
 
 class ModchartState 
 {
-	//public static var shaders:Array<LuaShader> = null;
 
 	public static var lua:State = null;
 
@@ -297,8 +290,6 @@ class ModchartState
 				trace("Lua version: " + Lua.version());
 				trace("LuaJIT version: " + Lua.versionJIT());
 				Lua.init_callbacks(lua);
-				
-				//shaders = new Array<LuaShader>();
 
 				var result = LuaL.dofile(lua, Paths.lua(PlayState.SONG.song.toLowerCase() + "/modchart")); // execute le file
 	
@@ -668,29 +659,6 @@ class ModchartState
 				Lua_helper.add_callback(lua,"tweenFadeOut", function(id:String, toAlpha:Float, time:Float, onComplete:String) {
 					FlxTween.tween(getActorByName(id), {alpha: toAlpha}, time, {ease: FlxEase.circOut, onComplete: function(flxTween:FlxTween) { if (onComplete != '' && onComplete != null) {callLua(onComplete,[id]);}}});
 				});
-//forgot and accidentally commit to master branch
-				// shader
-				
-				/*Lua_helper.add_callback(lua,"createShader", function(frag:String,vert:String) {
-					var shader:LuaShader = new LuaShader(frag,vert);
-
-					trace(shader.glFragmentSource);
-
-					shaders.push(shader);
-					// if theres 1 shader we want to say theres 0 since 0 index and length returns a 1 index.
-					return shaders.length == 1 ? 0 : shaders.length;
-				});
-
-				
-				Lua_helper.add_callback(lua,"setFilterHud", function(shaderIndex:Int) {
-					PlayState.instance.camHUD.setFilters([new ShaderFilter(shaders[shaderIndex])]);
-				});
-
-				Lua_helper.add_callback(lua,"setFilterCam", function(shaderIndex:Int) {
-					FlxG.camera.setFilters([new ShaderFilter(shaders[shaderIndex])]);
-				});*/
-
-				// default strums
 
 				for (i in 0...PlayState.strumLineNotes.length) {
 					var member = PlayState.strumLineNotes.members[i];
