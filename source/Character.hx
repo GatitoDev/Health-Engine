@@ -1,10 +1,19 @@
 package;
 
+import haxe.Json;
+import openfl.Assets;
+import data.BaseSprite;
 import flixel.animation.FlxAnimation;
 import flixel.graphics.frames.FlxFramesCollection;
-import data.BaseSprite;
 
 using StringTools;
+
+typedef CharacterData = {
+	var tex:String;
+	var init:String;
+	var ?flipX:Bool;
+	var anims:Dynamic;
+}
 
 class Character extends BaseSprite
 {
@@ -21,52 +30,7 @@ class Character extends BaseSprite
 		this.isPlayer = isPlayer;
 		antialiasing = true;
 
-		var anims:Array<Array<Dynamic>> = [];
-		var defaultAnim:String = 'idle';
-
-		switch (curCharacter)
-		{
-			case 'gf':
-				anims = [['cheer', 'GF Cheer'], ['singLEFT', 'GF left note'], ['singRIGHT', 'GF Right Note'],
-					['singUP', 'GF Up Note'], ['singDOWN', 'GF Down Note'], ['scared', 'GF FEAR', 24, true]];
-				
-				frames = Paths.getSparrowAtlas('characters/GF_assets');
-				for (a in anims) animation.addByPrefix(a[0], a[1], a[2] ?? 24, a[3] ?? false);
-				
-				animation.addByIndices('sad', 'gf sad', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], "", 24, false);
-				animation.addByIndices('danceLeft', 'GF Dancing Beat', [30, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], "", 24, false);
-				animation.addByIndices('danceRight', 'GF Dancing Beat', [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29], "", 24, false);
-				animation.addByIndices('hairBlow', "GF Dancing Beat Hair blowing", [0, 1, 2, 3], "", 24, true);
-				animation.addByIndices('hairFall', "GF Dancing Beat Hair Landing", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "", 24, false);
-
-				addOffset('cheer'); addOffset('sad', -2, -2); addOffset('danceLeft', 0, -9); addOffset('danceRight', 0, -9);
-				addOffset("singUP", 0, 4); addOffset("singRIGHT", 0, -20); addOffset("singLEFT", 0, -19); addOffset("singDOWN", 0, -20);
-				addOffset('hairBlow', 45, -8); addOffset('hairFall', 0, -9); addOffset('scared', -2, -17);
-				defaultAnim = 'danceRight';
-
-			case 'dad':
-				anims = [['idle', 'Dad idle dance', 24, true], ['singUP', 'Dad Sing Note UP'],
-					['singRIGHT', 'Dad Sing Note RIGHT'], ['singDOWN', 'Dad Sing Note DOWN'], ['singLEFT', 'Dad Sing Note LEFT']];
-				
-				loadAnims('DADDY_DEAREST', anims);
-				addOffset('idle'); addOffset("singDOWN", -4, -30); addOffset("singRIGHT", -7, 12);
-				addOffset("singUP", -8, 52); addOffset("singLEFT", -2, 29);
-
-			case 'bf':
-				anims = [['idle', 'BF idle dance'], ['singUP', 'BF NOTE UP0'], ['singLEFT', 'BF NOTE LEFT0'],
-					['singRIGHT', 'BF NOTE RIGHT0'], ['singDOWN', 'BF NOTE DOWN0'], ['singUPmiss', 'BF NOTE UP MISS'],
-					['singLEFTmiss', 'BF NOTE LEFT MISS'], ['singRIGHTmiss', 'BF NOTE RIGHT MISS'],
-					['singDOWNmiss', 'BF NOTE DOWN MISS'], ['hey', 'BF HEY'], ['firstDeath', "BF dies"],
-					['deathLoop', "BF Dead Loop", 24, true], ['deathConfirm', "BF Dead confirm"], ['scared', 'BF idle shaking', 24, true]];
-				
-				loadAnims('BOYFRIEND', anims);
-				addOffset('idle', -5); addOffset("singUP", -29, 27); addOffset("singRIGHT", -38, -7); addOffset("singLEFT", 12, -6);
-				addOffset("singDOWN", -10, -50); addOffset("singUPmiss", -29, 27); addOffset("singRIGHTmiss", -30, 21);
-				addOffset("singLEFTmiss", 12, 24); addOffset("singDOWNmiss", -11, -19); addOffset("hey", 7, 4);
-				addOffset('firstDeath', 37, 11); addOffset('deathLoop', 37, 5); addOffset('deathConfirm', 37, 69); addOffset('scared', -4);
-				flipX = true;
-		}
-		playAnim(defaultAnim);
+		loadCharacterFromJSON(curCharacter);
 
 		if (isPlayer) {
 			flipX = !flipX;
@@ -78,13 +42,47 @@ class Character extends BaseSprite
 		dance();
 	}
 
-	private static var frameCache:Map<String, FlxFramesCollection> = new Map();
-	function loadAnims(path:String, anims:Array<Array<Dynamic>>):Void {
-		var cacheKey:String = 'characters/${path}';
+	private function loadCharacterFromJSON(character:String):Void {
+		var path:String = Paths.getPreloadPath('images/characters/$character.json');
+		
+		if (!Assets.exists(path)) {
+			trace('Character JSON not found: $path');
+			return;
+		}
+
+		var jsonContent:String = Assets.getText(path);
+		var charData:CharacterData = Json.parse(jsonContent);
+
+		var cacheKey:String = 'characters/${charData.tex}';
 		if (!frameCache.exists(cacheKey)) frameCache.set(cacheKey, Paths.getSparrowAtlas(cacheKey));
 		frames = frameCache.get(cacheKey);
-		for (a in anims) animation.addByPrefix(a[0], a[1], a[2] ?? 24, a[3] ?? false);
+
+		if (charData.flipX != null) flipX = charData.flipX;
+
+		var animFields:Array<String> = Reflect.fields(charData.anims);
+		for (animName in animFields) {
+			var animData:Array<Dynamic> = Reflect.field(charData.anims, animName);
+			var prefix:String = animData[0];
+			var offsetX:Float = animData[1];
+			var offsetY:Float = animData[2];
+			
+			if (animData.length > 3 && Std.isOfType(animData[3], Array)) {
+				var frames:Array<Int> = cast animData[3];
+				var fps:Int = (animData.length > 4) ? animData[4] : 24;
+				var looped:Bool = (animData.length > 5) ? animData[5] : false;
+				animation.addByIndices(animName, prefix, frames, "", fps, looped);
+			} else {
+				var fps:Int = (animData.length > 3) ? animData[3] : 24;
+				var looped:Bool = (animData.length > 4) ? animData[4] : false;
+				animation.addByPrefix(animName, prefix, fps, looped);
+			}
+			
+			addOffset(animName, offsetX, offsetY);
+		}
+		playAnim(charData.init);
 	}
+
+	private static var frameCache:Map<String, FlxFramesCollection> = new Map();
 
 	private function swapAnimationFrames(anim1:String, anim2:String):Void {
 		var temp:Array<Int> = animation.getByName(anim1).frames;
@@ -98,16 +96,14 @@ class Character extends BaseSprite
 			super.update(elapsed);
 			return;
 		}
-		if (!curCharacter.startsWith('bf')) {
-			if (curAnim.name.startsWith('sing')) {
-				holdTimer += elapsed;
-				if (holdTimer >= Conductor.stepCrochet * (curCharacter == 'dad' ? 0.0061 : 0.004)) {
-					dance();
-					holdTimer = 0;
-				}
-			}
+		if (curAnim.name.startsWith('sing')) {
+			if (animation.curAnim.finished) {
+				dance();
+				holdTimer = 0;
+			} else holdTimer += elapsed;
 		}
-		if (curCharacter == 'gf' && curAnim.name == 'hairFall' && curAnim.finished) playAnim('danceRight');
+		if (curCharacter == 'gf' && curAnim.name == 'hairFall' && curAnim.finished) 
+			playAnim('danceRight');
 		super.update(elapsed);
 	}
 

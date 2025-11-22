@@ -391,8 +391,8 @@ class PlayState extends MusicBeatState
 	function startCountdown():Void
 	{
 		inCutscene = false;
-		generateStaticArrows(0);
-		generateStaticArrows(1);
+		StrumLine.makeStatic(0, strumLine, strumLineNotes, playerStrums, SONG, isStoryMode);
+		StrumLine.makeStatic(1, strumLine, strumLineNotes, playerStrums, SONG, isStoryMode);
 
 		#if windows if (executeModchart) {
 			luaModchart = ModchartState.createModchartState();
@@ -562,37 +562,6 @@ class PlayState extends MusicBeatState
 	}
 
 	function sortByShit(Obj1:Note, Obj2:Note):Int { return FlxSort.byValues(FlxSort.ASCENDING, Obj1.strumTime, Obj2.strumTime); }
-
-	private function generateStaticArrows(player:Int):Void {
-		final directions:Array<String> = ['LEFT', 'DOWN', 'UP', 'RIGHT'];
-		final prefixes:Array<String> = ['left', 'down', 'up', 'right'];
-		final colors:Array<String> = ['green', 'red', 'blue', 'purple'];
-		final colorFrames:Array<Int> = [6, 7, 5, 4];
-		final arrowColors:Array<String> = ['arrowUP', 'arrowRIGHT', 'arrowDOWN', 'arrowLEFT'];
-
-		for (i in 0...4) {
-			final xPos:Float = Note.swagWidth * i + 50 + (FlxG.width / 2 * player);
-			final isPixel:Bool = SONG.noteStyle == 'pixel';
-			final anims = [
-				{name: 'static', prefix: isPixel ? null : 'arrow${directions[i]}', frames: isPixel ? [i] : null, frameRate: 0, loop: false},
-				{name: 'pressed', prefix: isPixel ? null : '${prefixes[i]} press', frames: isPixel ? [i + 4, i + 8] : null, frameRate: isPixel ? 12 : 24, loop: false},
-				{name: 'confirm', prefix: isPixel ? null : '${prefixes[i]} confirm', frames: isPixel ? [i + 12, i + 16] : null,frameRate: isPixel ? (i == 2 ? 12 : 24) : 24, loop: false}
-			];
-			final babyArrow:Sprite = Sprite.create(isPixel ? 'weeb/pixelUI/arrows-pixels' : 'NOTE_assets', xPos, strumLine.y,
-			 1, 1, { scale: isPixel ? daPixelZoom : 0.7, antialiasing: !isPixel}, { atlas: !isPixel, animations: anims, defaultAnim: 'static'});
-			for (j in 0...4) isPixel ? babyArrow.animation.add(colors[j], [colorFrames[j]]) : babyArrow.animation.addByPrefix(colors[j], arrowColors[j]);
-
-			if (!isStoryMode) {
-				babyArrow.y -= 10;
-				babyArrow.alpha = 0;
-				FlxTween.tween(babyArrow, {y: babyArrow.y + 10, alpha: 1}, 1, {ease: FlxEase.circOut, startDelay: 0.5 + (0.2 * i)});
-			}
-
-			babyArrow.ID = i;
-			(player == 1 ? playerStrums : strumLineNotes).add(babyArrow);
-			strumLineNotes.add(babyArrow);
-		}
-	}
 
 	function tweenCamIn():Void { FlxTween.tween(FlxG.camera, {zoom: 1.3}, (Conductor.stepCrochet * 4 / 1000), {ease: FlxEase.elasticInOut}); }
 

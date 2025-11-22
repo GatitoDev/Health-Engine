@@ -1,0 +1,21 @@
+{
+  "tex": "BOYFRIEND",
+  "init": "idle", 
+  "flipX": true,
+  "anims": {
+    "idle": ["BF idle dance", -5, 0],
+    "singUP": ["BF NOTE UP0", -29, 27],
+    "singLEFT": ["BF NOTE LEFT0", 12, -6],
+    "singRIGHT": ["BF NOTE RIGHT0", -38, -7],
+    "singDOWN": ["BF NOTE DOWN0", -10, -50],
+    "singUPmiss": ["BF NOTE UP MISS", -29, 27],
+    "singLEFTmiss": ["BF NOTE LEFT MISS", 12, 24],
+    "singRIGHTmiss": ["BF NOTE RIGHT MISS", -30, 21],
+    "singDOWNmiss": ["BF NOTE DOWN MISS", -11, -19],
+    "hey": ["BF HEY", 7, 4],
+    "firstDeath": ["BF dies", 37, 11],
+    "deathLoop": ["BF Dead Loop", 37, 5, 24, true],
+    "deathConfirm": ["BF Dead confirm", 37, 69],
+    "scared": ["BF idle shaking", -4, 0, 24, true]
+  }
+}

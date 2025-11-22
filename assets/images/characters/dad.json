@@ -1,0 +1,11 @@
+{
+  "tex": "DADDY_DEAREST", 
+  "init": "idle",
+  "anims": {
+    "idle": ["Dad idle dance", 0, 0, 24, true],
+    "singUP": ["Dad Sing Note UP", -8, 52],
+    "singRIGHT": ["Dad Sing Note RIGHT", -7, 12],
+    "singDOWN": ["Dad Sing Note DOWN", -4, -30],
+    "singLEFT": ["Dad Sing Note LEFT", -2, 29]
+  }
+}
