@@ -118,8 +118,7 @@ class FreeplayState extends MusicBeatState
 		curDifficulty = (curDifficulty + change) % 3;
 		if (curDifficulty < 0) curDifficulty = 2;
 		#if !switch intendedScore = Highscore.getScore(songs[curSelected].songName, curDifficulty); #end
-		var diff:Array<String> = ["EASY", "NORMAL", "HARD"];
-		diffText.text = '< ${diff[curDifficulty]} >';
+		diffText.text = '< ${CoolUtil.difficultyArray[curDifficulty]} >';
 	}
 
 	function changeSelection(change:Int = 0):Void {

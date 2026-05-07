@@ -23,8 +23,7 @@ class Character extends BaseSprite
 	public var holdTimer:Float = 0;
 	private var danced:Bool = false;
 
-	public function new(x:Float, y:Float, ?character:String = "bf", ?isPlayer:Bool = false)
-	{
+	public function new(x:Float, y:Float, ?character:String = "bf", ?isPlayer:Bool = false):Void {
 		super(x, y);
 		curCharacter = character;
 		this.isPlayer = isPlayer;
@@ -117,7 +116,7 @@ class Character extends BaseSprite
 					danced = !danced;
 					playAnim(danced ? 'danceRight' : 'danceLeft');
 				}
-			default: if (curAnim.name != 'idle') playAnim('idle');
+			default: playAnim('idle', true);
 		}
 	}
 }

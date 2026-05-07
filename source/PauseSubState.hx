@@ -77,10 +77,6 @@ class PauseSubState extends MusicBeatSubstate {
 				FlxG.switchState(() -> new PlayState());
             case "Exit to menu":
 				FlxG.sound.play(Paths.sound('cancelMenu'));
-                #if windows if (PlayState.luaModchart != null) {
-                    PlayState.luaModchart.die();
-                    PlayState.luaModchart = null;
-                } #end
                 if (FlxG.save.data.fpsCap > 290) KadeEngineData.setFPSCap(290);
                 FlxG.switchState(() -> new MainMenuState());
         }

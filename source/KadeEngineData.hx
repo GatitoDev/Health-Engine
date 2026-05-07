@@ -98,6 +98,7 @@ class KadeEngineData
         saveSettings();
     }
 
-    public static function getFPSCap():Float { return fpsCap; }
-    public static function getFPS():Float { return fpsCounter != null ? fpsCounter.currentFPS : 0; }
+    public static function getFPSCap():Float return fpsCap;
+     public static function restoreFPSCap():Void Lib.current.stage.frameRate = fpsCap;
+    public static function getFPS():Float return fpsCounter != null ? fpsCounter.currentFPS : 0;
 }
