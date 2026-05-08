@@ -34,10 +34,15 @@ class NoteTest extends FlxTypedGroup<FlxBasic> {
     private var playerStrums:FlxTypedGroup<FlxSprite> = null;
     private var strumLineNotes:FlxTypedGroup<FlxSprite> = null;
 
-    public function new(song:SwagSong) {
+    public var bf:Character;
+    public var dad:Character;
+
+    public function new(song:SwagSong, ?bf:Character, ?dad:Character):Void {
         super();
 
         this.SONG = song;
+        this.bf = bf;
+        this.dad = dad;
 
         add(noteGroup = new FlxTypedGroup<FlxBasic>());
         noteGroup.add(strumLineNotes = new FlxTypedGroup<FlxSprite>());
@@ -221,6 +226,12 @@ class NoteTest extends FlxTypedGroup<FlxBasic> {
 
                     if (SONG.needsVoices) vocals.volume = 1;
 
+                    // Dad animation
+                    if (dad != null) {
+                        var altAnim:String = '';
+                        dad.playAnim(['singLEFT' + altAnim, 'singDOWN' + altAnim, 'singUP' + altAnim, 'singRIGHT' + altAnim][daNote.noteData], true);
+                    }
+
                     killNote(daNote);
                 }
 
@@ -229,6 +240,119 @@ class NoteTest extends FlxTypedGroup<FlxBasic> {
                     killNote(daNote);
                 }
             });
+        }
+
+        // Handle player input
+        keyShit();
+    }
+
+    private function keyShit():Void {
+        var holdArray:Array<Bool> = [FlxG.keys.pressed.LEFT, FlxG.keys.pressed.DOWN, FlxG.keys.pressed.UP, FlxG.keys.pressed.RIGHT];
+        var pressArray:Array<Bool> = [FlxG.keys.justPressed.LEFT, FlxG.keys.justPressed.DOWN, FlxG.keys.justPressed.UP, FlxG.keys.justPressed.RIGHT];
+        var releaseArray:Array<Bool> = [FlxG.keys.justReleased.LEFT, FlxG.keys.justReleased.DOWN, FlxG.keys.justReleased.UP, FlxG.keys.justReleased.RIGHT];
+
+        // Handle sustain notes (hold)
+        var anyHold:Bool = holdArray[0] || holdArray[1] || holdArray[2] || holdArray[3];
+        if (anyHold && generatedMusic) {
+            notes.forEachAlive(daNote -> {
+                if (daNote.isSustainNote && daNote.canBeHit && daNote.mustPress && holdArray[daNote.noteData]) {
+                    goodNoteHit(daNote);
+                }
+            });
+        }
+
+        // Handle pressed notes
+        var anyPress:Bool = pressArray[0] || pressArray[1] || pressArray[2] || pressArray[3];
+        if (anyPress && generatedMusic) {
+            if (bf != null) bf.holdTimer = 0;
+            
+            var possibleNotes:Array<Note> = [];
+            var directionMap:Map<Int, Bool> = new Map();
+            var dumbNotes:Array<Note> = [];
+
+            notes.forEachAlive(daNote -> {
+                if (daNote.canBeHit && daNote.mustPress && !daNote.tooLate && !daNote.wasGoodHit) {
+                    if (directionMap.exists(daNote.noteData)) {
+                        for (coolNote in possibleNotes) {
+                            if (coolNote.noteData == daNote.noteData) {
+                                if (Math.abs(daNote.strumTime - coolNote.strumTime) < 10) {
+                                    dumbNotes.push(daNote);
+                                    break;
+                                } else if (daNote.strumTime < coolNote.strumTime) {
+                                    possibleNotes.remove(coolNote);
+                                    possibleNotes.push(daNote);
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        possibleNotes.push(daNote);
+                        directionMap.set(daNote.noteData, true);
+                    }
+                }
+            });
+
+            for (note in dumbNotes) {
+                note.kill();
+                notes.remove(note, true);
+                note.destroy();
+            }
+
+            if (possibleNotes.length > 1) {
+                possibleNotes.sort((a, b) -> Std.int(a.strumTime - b.strumTime));
+            }
+
+            if (possibleNotes.length > 0) {
+                for (coolNote in possibleNotes) {
+                    if (pressArray[coolNote.noteData]) {
+                        goodNoteHit(coolNote);
+                    }
+                }
+            }
+        }
+
+        playerStrums.forEach(spr -> {
+			if (pressArray[spr.ID] && spr.animation.curAnim.name != 'confirm') spr.animation.play('pressed');
+			if (!holdArray[spr.ID]) spr.animation.play('static');
+			spr.centerOffsets();
+			if (spr.animation.curAnim.name == 'confirm') {
+				spr.offset.x -= 13;
+				spr.offset.y -= 13;
+			}
+		});
+
+        if (bf != null && bf.holdTimer > Conductor.stepCrochet * 4 * 0.001 && (!holdArray.contains(true))) {
+            if (bf.animation.curAnim.name.startsWith('sing') && !bf.animation.curAnim.name.endsWith('miss')) {
+                bf.playAnim('idle');
+            }
+        }
+    }
+
+    private function goodNoteHit(note:Note):Void {
+        if (!note.wasGoodHit) {
+            if (bf != null) {
+                bf.playAnim(['singLEFT', 'singDOWN', 'singUP', 'singRIGHT'][note.noteData], true);
+            }
+
+            var targetStrum:FlxSprite = playerStrums.members[note.noteData];
+            if (targetStrum != null) {
+                targetStrum.animation.play('confirm', true);
+                targetStrum.centerOffsets();
+                targetStrum.offset.x -= 13;
+                targetStrum.offset.y -= 13;
+
+                new FlxTimer().start(0.1, function(tmr:FlxTimer) {
+                    targetStrum.animation.play('static');
+                    targetStrum.centerOffsets();
+                });
+            }
+
+            vocals.volume = 1;
+            note.wasGoodHit = true;
+            
+            note.kill();
+            notes.remove(note, true);
+            note.destroy();
         }
     }
 

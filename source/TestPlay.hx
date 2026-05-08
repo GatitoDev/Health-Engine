@@ -56,7 +56,7 @@ class TestPlay extends MusicBeatState
         remove(stage.foreground); 
         add(stage.foreground);
 
-        noteField = new NoteTest(SONG);
+        noteField = new NoteTest(SONG, bf, dad);
         add(noteField);
         noteField.noteGroup.cameras = [camHUD];
 
@@ -87,7 +87,7 @@ class TestPlay extends MusicBeatState
         var data:Int = Std.int(Math.abs(noteData));
         if (data < anims.length) dad.playAnim('${anims[data]}${altAnim}', true);
     }
-
+    
     function focus(type:Int):Void {
         var characters:Array<Character> = [dad, bf, gf];
         var x:Array<Float> = [150, -100, 0];
