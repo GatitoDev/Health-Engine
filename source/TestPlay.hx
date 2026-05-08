@@ -23,6 +23,8 @@ class TestPlay extends MusicBeatState
     
 	private var noteField:NoteTest;
 
+    public static var daPixelZoom(default, null):Int = 6;
+
     override public function create():Void {
         super.create();
 
@@ -38,7 +40,7 @@ class TestPlay extends MusicBeatState
         persistentUpdate = persistentDraw = true;
 
         if (FlxG.sound.music != null) FlxG.sound.music.stop();
-        if (SONG == null) SONG = Song.loadFromJson('fresh', 'fresh');
+        if (SONG == null) SONG = Song.loadFromJson('bopeebo', 'bopeebo');
 
 		Conductor.mapBPMChanges(SONG);
 		Conductor.changeBPM(SONG.bpm);
@@ -54,6 +56,12 @@ class TestPlay extends MusicBeatState
         remove(stage.foreground); 
         add(stage.foreground);
 
+        noteField = new NoteTest(SONG);
+        add(noteField);
+        noteField.noteGroup.cameras = [camHUD];
+
+        noteField.generateSong();
+
         add(camFollow = new FlxObject(gf.getGraphicMidpoint().x, gf.getGraphicMidpoint().y, 1, 1));
 
         FlxG.camera.follow(camFollow, LOCKON, 0.04);
@@ -62,11 +70,6 @@ class TestPlay extends MusicBeatState
 
         FlxG.worldBounds.set(0, 0, FlxG.width, FlxG.height);
 
-        noteField = new NoteTest(SONG);
-        add(noteField);
-        noteField.noteGroup.cameras = [camHUD];
-
-        noteField.generateSong();
         noteField.startingSong = true;
         noteField.startCountdown();
     }
@@ -76,6 +79,13 @@ class TestPlay extends MusicBeatState
 
         camGame.zoom = FlxMath.lerp(0.9, camGame.zoom, 0.95);
         camHUD.zoom = FlxMath.lerp(1, camHUD.zoom, 0.95);
+    }
+
+    public function playSingAnim(noteData:Int, ?altAnim:String = ""):Void {
+        var altAnim:String = (SONG.notes[Math.floor(curStep / 16)] != null && SONG.notes[Math.floor(curStep / 16)].altAnim) ? '-alt' : '';
+        var anims:Array<String> = ['singLEFT', 'singDOWN', 'singUP', 'singRIGHT'];
+        var data:Int = Std.int(Math.abs(noteData));
+        if (data < anims.length) dad.playAnim('${anims[data]}${altAnim}', true);
     }
 
     function focus(type:Int):Void {
@@ -94,6 +104,7 @@ class TestPlay extends MusicBeatState
 
     override function beatHit():Void {
         super.beatHit(); 
+        noteField.beatHit();
 
         if (camGame.zoom < 1.35 && curBeat % 4 == 0) {
             camGame.zoom += 0.015;

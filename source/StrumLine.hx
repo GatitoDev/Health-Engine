@@ -1,72 +1,69 @@
 package;
 
 import flixel.FlxG;
-import Song.SwagSong;
 import flixel.FlxSprite;
+import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
-import flixel.group.FlxGroup.FlxTypedGroup;
+import Song.SwagSong;
 
 class StrumLine
 {
-    public static function makeStatic(player:Int, line:FlxSprite, notes:FlxTypedGroup<FlxSprite>, playerStrums:FlxTypedGroup<FlxSprite>, song:SwagSong, storyMode:Bool):Void {
-        for (i in 0...4) {
-            final x:Float = Note.swagWidth * i + 50 + (FlxG.width / 2 * player);
-            final pixel:Bool = song.noteStyle == 'pixel';
-            final arrow:FlxSprite = makeArrow(pixel, x, line.y, i);
+    private static var DIRECTIONS:Array<String> = ['LEFT', 'DOWN', 'UP', 'RIGHT'];
+    private static var PREFIXES:Array<String> = ['left', 'down', 'up', 'right'];
+    private static var COLORS:Array<String> = ['purple', 'blue', 'green', 'red'];
 
-            if (!storyMode) {
+    public static function makeStatic(player:Int, line:FlxSprite, notes:FlxTypedGroup<FlxSprite>, strums:FlxTypedGroup<FlxSprite>, song:SwagSong, story:Bool):Void {
+        final isPixel:Bool = (song.noteStyle == 'pixel');
+
+        for (i in 0...4) {
+            var arrow:FlxSprite = draw(isPixel, (Note.swagWidth * i) + (FlxG.width / 2 * player) + (2 * 42), line.y, i);
+
+            if (!story) {
                 arrow.y -= 10;
                 arrow.alpha = 0;
-                FlxTween.tween(arrow, {y: arrow.y + 10, alpha: 1}, 1, {ease: FlxEase.circOut, startDelay: 0.5 + (0.2 * i)});
+                FlxTween.tween(arrow, {y: arrow.y + 10, alpha: 1}, 1, {
+                    ease: FlxEase.circOut, 
+                    startDelay: 0.5 + (0.2 * i)
+                });
             }
 
             arrow.ID = i;
-            if (player == 1) playerStrums.add(arrow);
             notes.add(arrow);
+            
+            if (player == 1) strums.add(arrow);
         }
     }
 
-    private static function makeArrow(pixel:Bool, x:Float, y:Float, dir:Int):FlxSprite
-    {
+    private static function draw(isPixel:Bool, x:Float, y:Float, id:Int):FlxSprite {
         var arrow:FlxSprite = new FlxSprite(x, y);
-        final dirs:Array<String> = ['LEFT', 'DOWN', 'UP', 'RIGHT'];
-        final prefs:Array<String> = ['left', 'down', 'up', 'right'];
-        final cols:Array<String> = ['purple', 'blue', 'green', 'red'];
-        final arrColors:Array<String> = ['arrowLEFT', 'arrowDOWN', 'arrowUP', 'arrowRIGHT'];
-        
-        if (pixel) {
+        arrow.scrollFactor.set();
+
+        if (isPixel)  {
             arrow.loadGraphic(Paths.image('weeb/pixelUI/arrows-pixels'), true, 17, 17);
             arrow.antialiasing = false;
-            arrow.setGraphicSize(Std.int(arrow.width * PlayState.daPixelZoom));
-            arrow.animation.add('static', [dir]);
-            arrow.animation.add('pressed', [dir + 4, dir + 8], 12, false);
-            arrow.animation.add('confirm', [dir + 12, dir + 16], dir == 2 ? 12 : 24, false);
-            for (j in 0...4) arrow.animation.add(cols[j], [getPixelFrame(j)]);
+            arrow.setGraphicSize(Std.int(arrow.width * TestPlay.daPixelZoom));
+            
+            arrow.animation.add('static', [id]);
+            arrow.animation.add('pressed', [id + 4, id + 8], 12, false);
+            arrow.animation.add('confirm', [id + 12, id + 16], (id == 2 ? 12 : 24), false);
+            
+            arrow.animation.add(COLORS[id], [id + 4]); 
         } else {
             arrow.frames = Paths.getSparrowAtlas('NOTE_assets');
             arrow.antialiasing = true;
             arrow.setGraphicSize(Std.int(arrow.width * 0.7));
-            arrow.animation.addByPrefix('static', 'arrow${dirs[dir]}');
-            arrow.animation.addByPrefix('pressed', '${prefs[dir]} press', 24, false);
-            arrow.animation.addByPrefix('confirm', '${prefs[dir]} confirm', 24, false);
-            for (j in 0...4) arrow.animation.addByPrefix(cols[j], arrColors[j]);
+
+            arrow.animation.addByPrefix('static', 'arrow${DIRECTIONS[id]}');
+            arrow.animation.addByPrefix('pressed', '${PREFIXES[id]} press', 24, false);
+            arrow.animation.addByPrefix('confirm', '${PREFIXES[id]} confirm', 24, false);
+            
+            arrow.animation.addByPrefix(COLORS[id], 'arrow${DIRECTIONS[id]}');
         }
 
-        arrow.animation.play('static');
         arrow.updateHitbox();
-        arrow.scrollFactor.set();
+        arrow.animation.play('static');
 
         return arrow;
-    }
-
-    private static function getPixelFrame(colIdx:Int):Int {
-        return switch (colIdx) {
-            case 0: 4;
-            case 1: 5;
-            case 2: 6;
-            case 3: 7;
-            case _: 0;
-        }
     }
 }
